@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 68.6 30.4% 95.5%;
+    --foreground: 200.9 19.7% 22.9%;
+    --card: 68.6 30.4% 97%;
+    --card-foreground: 200.9 19.7% 22.9%;
+    --popover: 68.6 30.4% 97%;
+    --popover-foreground: 200.9 19.7% 22.9%;
+    --primary: 131.3 21.6% 29%;
+    --primary-foreground: 68.6 30.4% 95.5%;
+    --secondary: 31.7 65.1% 61.8%;
+    --secondary-foreground: 200.9 19.7% 22.9%;
+    --muted: 68.6 20% 90%;
+    --muted-foreground: 200.9 15% 45%;
+    --accent: 26.4 27.7% 53.3%;
+    --accent-foreground: 68.6 30.4% 95.5%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 68.6 20% 85%;
+    --input: 68.6 20% 88%;
+    --ring: 131.3 21.6% 29%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 200.9 19.7% 8%;
+    --foreground: 68.6 30.4% 95.5%;
+    --card: 200.9 19.7% 12%;
+    --card-foreground: 68.6 30.4% 95.5%;
+    --popover: 200.9 19.7% 12%;
+    --popover-foreground: 68.6 30.4% 95.5%;
+    --primary: 131.3 21.6% 35%;
+    --primary-foreground: 68.6 30.4% 95.5%;
+    --secondary: 31.7 45% 45%;
+    --secondary-foreground: 68.6 30.4% 95.5%;
+    --muted: 200.9 15% 18%;
+    --muted-foreground: 68.6 20% 65%;
+    --accent: 26.4 27.7% 60%;
+    --accent-foreground: 68.6 30.4% 95.5%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 200.9 15% 20%;
+    --input: 200.9 15% 20%;
+    --ring: 131.3 21.6% 35%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* Biophilic Design Elements */
+.organic-shape {
+  border-radius: 2rem 1rem 2rem 1rem;
+}
+
+.organic-card {
+  border-radius: 1.5rem 0.75rem 1.5rem 0.75rem;
+  background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted)) 100%);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.nature-gradient {
+  background: linear-gradient(135deg, 
+    hsl(var(--background)) 0%, 
+    hsl(68.6, 25%, 92%) 50%, 
+    hsl(131.3, 15%, 88%) 100%);
+}
+
+.leaf-shadow {
+  box-shadow: 
+    0 10px 25px -5px rgba(131, 131, 131, 0.1),
+    0 8px 10px -6px rgba(131, 131, 131, 0.05);
+}
+
+.organic-button {
+  border-radius: 1.25rem 0.5rem 1.25rem 0.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.organic-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px -4px rgba(131, 131, 131, 0.15);
+}
+
+.natural-texture {
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(131, 131, 131, 0.15) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .mobile-spacing {
+    @apply px-4 py-6;
+  }
+  
+  .mobile-card {
+    @apply rounded-2xl;
+    border-radius: 1.25rem 0.75rem 1.25rem 0.75rem;
+  }
+  
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+  }
+  
+  .mobile-results-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+  
+  .mobile-results-card {
+    @apply p-4 rounded-xl border;
+    border-radius: 1rem 0.5rem 1rem 0.5rem;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent));
+}
