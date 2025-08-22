@@ -16,6 +16,8 @@ import QuestionPreview from './QuestionPreview';
 import ScoringAdjustments from './ScoringAdjustments';
 import { FormData, ComplexityTier } from '../types/scorecard';
 import { toast } from 'sonner';
+import { useUrlParams } from '../hooks/useUrlParams';
+import { assessmentStorage } from '../services/assessmentStorage';
 
 interface ScoringAdjustment {
   type: 'penalty' | 'bonus' | 'warning';
@@ -45,6 +47,7 @@ interface EnhancedBreakdown {
 }
 
 const ScorecardCalculator = () => {
+  const urlParams = useUrlParams();
   const [currentSection, setCurrentSection] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -58,6 +61,18 @@ const ScorecardCalculator = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [startTime] = useState<Date>(new Date());
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Display tracking info if URL params are present
+  useEffect(() => {
+    if (urlParams.userId || urlParams.trackingId) {
+      console.log('Assessment tracking active:', {
+        userId: urlParams.userId,
+        trackingId: urlParams.trackingId,
+        source: urlParams.source,
+        campaign: urlParams.campaign
+      });
+    }
+  }, [urlParams]);
 
   const sections = [
     { title: 'Business & Systems', icon: Building2 },

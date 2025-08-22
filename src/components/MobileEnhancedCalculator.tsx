@@ -15,6 +15,8 @@ import Results from './Results';
 import QuestionPreview from './QuestionPreview';
 import { FormData, ComplexityTier } from '../types/scorecard';
 import { toast } from 'sonner';
+import { useUrlParams } from '../hooks/useUrlParams';
+import { assessmentStorage } from '../services/assessmentStorage';
 
 interface ScoringAdjustment {
   type: 'penalty' | 'bonus' | 'warning';
@@ -44,6 +46,7 @@ interface EnhancedBreakdown {
 }
 
 const MobileEnhancedCalculator = () => {
+  const urlParams = useUrlParams();
   const [currentSection, setCurrentSection] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [formData, setFormData] = useState<FormData>({

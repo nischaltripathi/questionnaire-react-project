@@ -14,13 +14,14 @@ import FindingsGrid from './visuals/FindingsGrid';
 import ReviewCTACard from './ReviewCTACard';
 import AreasToExplore from './AreasToExplore';
 // import { createAssessmentRecord, CreateAssessmentRecordInputType } from 'zite-endpoints-sdk';
+import { useUrlParams } from '../hooks/useUrlParams';
+import { assessmentStorage } from '../services/assessmentStorage';
 
 interface ResultsProps {
   score: number;
   tier: ComplexityTier;
-  breakdown?: any;
   formData?: FormData;
-  onRestart: () => void;
+  onReset?: () => void;
   onShare?: () => void;
 }
 
@@ -256,9 +257,10 @@ const AnimatedSection: React.FC<{ children: React.ReactNode; delay?: number }> =
   );
 };
 
-const Results: React.FC<ResultsProps> = ({ score, tier, formData }) => {
+const Results: React.FC<ResultsProps> = ({ score, tier, formData, onReset }) => {
+  const urlParams = useUrlParams();
+  const [prospectDialogOpen, setProspectDialogOpen] = useState(false);
   const [prospectInfoSaved, setProspectInfoSaved] = useState(false);
-  const [prospectDialogOpen, setProspectDialogOpen] = useState(true);
 
   const TierIcon = getTierIcon(tier);
   const findings = buildCriticalFindings(formData);
@@ -281,18 +283,27 @@ const Results: React.FC<ResultsProps> = ({ score, tier, formData }) => {
         visionPriorities: {}
       };
 
-      const assessmentData: CreateAssessmentRecordInputType = {
-        prospectName: name,
-        prospectEmail: email,
-        complexityScore: score,
-        complexityTier: tier,
-        formData: formData || defaultFormData
-      };
+      // Save to local storage with URL tracking parameters
+      const submission = await assessmentStorage.saveSubmission({
+        userId: urlParams.userId,
+        trackingId: urlParams.trackingId,
+        source: urlParams.source,
+        campaign: urlParams.campaign,
+        formData: formData || defaultFormData,
+        score,
+        tier
+      });
 
-      await createAssessmentRecord(assessmentData);
+      // Also attempt to submit to API if available
+      try {
+        await assessmentStorage.submitToAPI(submission);
+      } catch (apiError) {
+        console.warn('API submission failed, data saved locally:', apiError);
+      }
       setProspectInfoSaved(true);
       setProspectDialogOpen(false);
-      toast.success('Your assessment has been saved! Here are your results.');
+      const trackingMessage = urlParams.userId ? ` (ID: ${urlParams.userId})` : '';
+      toast.success(`Your assessment has been saved${trackingMessage}! Here are your results.`);
     } catch (error) {
       console.error('Failed to save assessment:', error);
       toast.error('Failed to save assessment. Please try again.');
