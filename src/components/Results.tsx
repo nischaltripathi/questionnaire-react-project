@@ -13,7 +13,6 @@ import ScoreBulletChart from './visuals/ScoreBulletChart';
 import FindingsGrid from './visuals/FindingsGrid';
 import ReviewCTACard from './ReviewCTACard';
 import AreasToExplore from './AreasToExplore';
-// import { createAssessmentRecord, CreateAssessmentRecordInputType } from 'zite-endpoints-sdk';
 import { useUrlParams } from '../hooks/useUrlParams';
 import { assessmentStorage } from '../services/assessmentStorage';
 
@@ -21,7 +20,11 @@ interface ResultsProps {
   score: number;
   tier: ComplexityTier;
   formData?: FormData;
+  // Optional breakdown is accepted by callers (calculators) but not required for display
+  // Keeping it here prevents prop type errors while remaining unused in this component
+  breakdown?: unknown;
   onReset?: () => void;
+  onRestart?: () => void;
   onShare?: () => void;
 }
 
@@ -257,7 +260,7 @@ const AnimatedSection: React.FC<{ children: React.ReactNode; delay?: number }> =
   );
 };
 
-const Results: React.FC<ResultsProps> = ({ score, tier, formData, onReset }) => {
+const Results: React.FC<ResultsProps> = ({ score, tier, formData, onReset, onRestart }) => {
   const urlParams = useUrlParams();
   const [prospectDialogOpen, setProspectDialogOpen] = useState(false);
   const [prospectInfoSaved, setProspectInfoSaved] = useState(false);
@@ -271,6 +274,13 @@ const Results: React.FC<ResultsProps> = ({ score, tier, formData, onReset }) => 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  // Ensure the prospect info dialog opens so results can be accessed
+  useEffect(() => {
+    if (!prospectInfoSaved) {
+      setProspectDialogOpen(true);
+    }
+  }, [prospectInfoSaved]);
 
   const handleSaveProspectInfo = async (name: string, email: string) => {
     try {

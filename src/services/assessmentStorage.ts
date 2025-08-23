@@ -85,18 +85,29 @@ class AssessmentStorage {
 
   // API simulation - in real implementation, this would call your backend
   async submitToAPI(submission: AssessmentSubmission): Promise<boolean> {
+    const endpoint = (import.meta as any)?.env?.VITE_ASSESSMENTS_API_URL as string | undefined;
+    if (!endpoint) {
+      // No endpoint configured; keep working with localStorage only
+      console.warn('VITE_ASSESSMENTS_API_URL not set. Skipping remote submission.');
+      return false;
+    }
+
     try {
-      // Simulate API call
-      console.log('Submitting to API:', submission);
-      
-      // In real implementation, replace with:
-      // const response = await fetch('/api/assessments', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(submission)
-      // });
-      // return response.ok;
-      
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(submission),
+        // credentials: 'include', // enable if your API requires cookies
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        console.error('Remote submission failed:', res.status, text);
+        return false;
+      }
+
       return true;
     } catch (error) {
       console.error('API submission failed:', error);

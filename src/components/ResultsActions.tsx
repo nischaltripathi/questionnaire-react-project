@@ -7,11 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
   MessageSquare, Share2, RotateCcw, Bookmark, 
-  Mail, CheckCircle, Loader2, Users, ExternalLink, Calendar, Gift 
+  Mail, CheckCircle, Loader2, ExternalLink, Calendar, Gift 
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ComplexityTier, FormData } from '../types/scorecard';
-import { createAssessmentRecord, CreateAssessmentRecordInputType, bookConsultation, BookConsultationInputType, trackBookingConversion, TrackBookingConversionInputType } from 'zite-endpoints-sdk';
+// Zite integration removed. Use local storage and optional HTTP endpoints via env.
 import ProspectInfoDialog from './ProspectInfoDialog';
 
 interface ResultsActionsProps {
@@ -56,6 +56,8 @@ const ResultsActions: React.FC<ResultsActionsProps> = ({
   }, [formData, hasBeenSaved, showOptionalDialog]);
 
   const generateTalkingPoints = (formData: FormData, tier: ComplexityTier, score: number): string => {
+    // score currently not used in talking points generation; keep signature for potential future use
+    void score;
     const points = [];
     
     const impactPercentage = tier === 'Low' ? '5-15%' : tier === 'Medium' ? '15-25%' : tier === 'High' ? '25-40%' : '35-65%';
@@ -110,32 +112,39 @@ const ResultsActions: React.FC<ResultsActionsProps> = ({
 
     try {
       const talkingPoints = generateTalkingPoints(formData, tier, score);
-      
-      const assessmentData: CreateAssessmentRecordInputType = {
+
+      // Persist locally
+      const prospectsKey = 'assessment-prospects';
+      const existing = JSON.parse(localStorage.getItem(prospectsKey) || '[]');
+      const recordId = `lead_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const localRecord = {
+        recordId,
         prospectName,
         prospectEmail,
         complexityScore: score,
         complexityTier: tier,
-        formData: formData,
-        sessionId: `session_${Date.now()}`
+        formData,
+        talkingPoints,
+        createdAt: new Date().toISOString()
       };
+      existing.push(localRecord);
+      localStorage.setItem(prospectsKey, JSON.stringify(existing));
 
-      const result = await createAssessmentRecord(assessmentData);
-      
-      try {
-        const trackingData: TrackBookingConversionInputType = {
-          leadId: result.recordId,
-          conversionType: 'assessment_completed',
-          complexityTier: tier,
-          industryPrimary: formData.businessSnapshot?.industry?.[0] || 'Unknown',
-          teamSize: formData.businessSnapshot?.teamSize || 'Unknown'
-        };
-        await trackBookingConversion(trackingData);
-      } catch (trackingError) {
-        console.error('Failed to track assessment completion:', trackingError);
+      // Optional remote submission
+      const assessmentsEndpoint = (import.meta as any)?.env?.VITE_ASSESSMENTS_API_URL as string | undefined;
+      if (assessmentsEndpoint) {
+        try {
+          await fetch(assessmentsEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(localRecord),
+          });
+        } catch (err) {
+          console.warn('Remote prospect save failed, kept locally:', err);
+        }
       }
-      
-      setSavedLeadId(result.recordId);
+
+      setSavedLeadId(recordId);
       setProspectInfo({ name: prospectName, email: prospectEmail });
       setHasBeenSaved(true);
       toast.success('Contact information saved! We\'ll follow up with additional insights.');
@@ -165,39 +174,30 @@ const ResultsActions: React.FC<ResultsActionsProps> = ({
       const keyFindings = generateKeyFindings(formData, tier, score);
       const talkingPoints = generateTalkingPoints(formData, tier, score);
 
-      const bookingData: BookConsultationInputType = {
-        leadId: savedLeadId,
-        prospectName: prospectInfo.name,
-        prospectEmail: prospectInfo.email,
-        complexityScore: score,
-        complexityTier: tier,
-        keyFindings,
-        talkingPoints,
-        industryPrimary: formData.businessSnapshot?.industry?.[0] || 'Unknown',
-        teamSize: formData.businessSnapshot?.teamSize || 'Unknown'
-      };
-
-      const result = await bookConsultation(bookingData);
-
-      if (result.success) {
+      // Optional conversion webhook
+      const conversionsEndpoint = (import.meta as any)?.env?.VITE_CONVERSIONS_API_URL as string | undefined;
+      if (conversionsEndpoint) {
         try {
-          const trackingData: TrackBookingConversionInputType = {
-            leadId: savedLeadId,
-            conversionType: 'consultation_booked',
-            complexityTier: tier,
-            industryPrimary: formData.businessSnapshot?.industry?.[0] || 'Unknown',
-            teamSize: formData.businessSnapshot?.teamSize || 'Unknown'
-          };
-          await trackBookingConversion(trackingData);
-        } catch (trackingError) {
-          console.error('Failed to track conversion:', trackingError);
+          await fetch(conversionsEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              leadId: savedLeadId,
+              event: 'consultation_booked',
+              complexityTier: tier,
+              keyFindings,
+              talkingPoints,
+              industryPrimary: formData.businessSnapshot?.industry?.[0] || 'Unknown',
+              teamSize: formData.businessSnapshot?.teamSize || 'Unknown'
+            })
+          });
+        } catch (err) {
+          console.warn('Conversion webhook failed:', err);
         }
-
-        setConsultationBooked(true);
-        toast.success('Calendar opened! Your assessment summary has been sent via email for the consultation.');
-      } else {
-        toast.error('Failed to process consultation booking');
       }
+
+      setConsultationBooked(true);
+      toast.success('Calendar opened! Your assessment summary has been prepared for the consultation.');
 
     } catch (error) {
       console.error('Failed to book consultation:', error);

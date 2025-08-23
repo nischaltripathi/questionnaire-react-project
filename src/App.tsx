@@ -1,10 +1,8 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './components/SimpleAuth';
 import ScorecardCalculator from './components/ScorecardCalculator';
 import MobileEnhancedCalculator from './components/MobileEnhancedCalculator';
-import SalesDashboard from './components/SalesDashboard';
-import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from "@/components/ui/sonner";
 import { Settings } from 'lucide-react';
 function App() {
@@ -51,18 +49,13 @@ function App() {
                         <Settings className="w-4 h-4 text-primary" />
                         <p className=''>© 2025 HuddleCo - Business Systems Assessment</p>
                       </div>
-                      <Link to="/sales-dashboard" className="organic-button px-4 py-2 hover:text-primary transition-colors opacity-60 hover:opacity-100 bg-primary/5 hover:bg-primary/10">
-                        Internal
-                      </Link>
+                      {/* Removed CRM dashboard link for simplified app */}
                     </div>
                   </div>
                 </footer>
               </div>} />
             
-            {/* Sales Dashboard Route - Protected */}
-            <Route path="/sales-dashboard" element={<ProtectedRoute>
-                <SalesDashboard />
-              </ProtectedRoute>} />
+            {/* Removed CRM dashboard route for simplified app */}
           </Routes>
           
           <Toaster />
